@@ -9,7 +9,7 @@ class Instance:
     def __init__(self, url: str, bearer_token: str) -> None:
         self.url = url
         self.bearer_token = bearer_token
-        self.courses = list()
+        self.courses = dict()
 
     def start_gather(self) -> None:
         headers = {
@@ -28,7 +28,7 @@ class Instance:
         # NOTE: Mayber replace with functool.partial
         # to avoid adding every parameter here
         get_json = lambda endpoint, full=False, params=None: self.get_json(endpoint, full=full, params=params)
-        for task in asyncio.as_completed([course.gather(get_json) for course in self.courses]):
+        for task in asyncio.as_completed([course.gather(get_json) for course in self.courses.values()]):
             await task
 
         # Shutdown
@@ -42,7 +42,8 @@ class Instance:
 
         if json:
             for course in json:
-                self.courses.append(Course(course['id'], course['name']))
+                course_id = course['id']
+                self.courses[course_id] = Course(course_id, course['name'])
 
     async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None) -> Union[list[dict], None]:
         if full:

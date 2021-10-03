@@ -7,12 +7,14 @@ import functools
 from lib.canvasobjects.item import File, Page, Assignment
 
 class Module:
-    def __init__(self, id, name, items_url) -> None:
+    def __init__(self, id, name, items_url, course_id=None) -> None:
         self.id = id
         self.name = name
         self.items_url = items_url
 
-        self.items = list()
+        self.course_id = course_id
+
+        self.items = dict()
 
         # Some other interesting values
         #self.items_count = items_count
@@ -32,9 +34,10 @@ class Module:
             tasks = []
             for item in json:
                 item_type = item['type']
+                item_id = item['id']
                 if item_type == 'File':
                     file_item = File()
-                    self.items.append(file_item)
+                    self.items[item_id] = file_item
 
                     task = functools.partial(file_item.get, item['url'], get_json)
                     tasks.append(task)
@@ -44,14 +47,14 @@ class Module:
                     pass
                 elif item_type == 'Assignment':
                     assignment_item = Assignment()
-                    self.items.append(assignment_item)
+                    self.items[item_id] = assignment_item
 
                     task = functools.partial(assignment_item.get, item['url'], get_json)
                     tasks.append(task)
                     pass
                 elif item_type == 'Page':
                     page_item = Page()
-                    self.items.append(page_item)
+                    self.items[item_id] = page_item
 
                     task = functools.partial(page_item.get, item['url'], get_json)
                     tasks.append(task)
