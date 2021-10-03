@@ -2,6 +2,7 @@
 import asyncio
 import aiohttp
 from typing import Union
+import logging
 
 from lib.canvasobjects.course import Course
 
@@ -55,5 +56,5 @@ class Instance:
             if resp.status == 200:
                 return await resp.json()
             else:
-                #print(f"Status code: {resp.status} -> {url}")
+                logging.debug(await resp.text())
                 return None

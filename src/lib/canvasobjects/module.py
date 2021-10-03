@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Union
 import functools
 
-from lib.canvasobjects.item import File, Page, Assignment
+from lib.canvasobjects.item import File, Page, Assignment, get_item_from_raw
 
 class Module:
     def __init__(self, id, name, items_url, course_id=None) -> None:
@@ -32,36 +32,9 @@ class Module:
 
         if json:
             tasks = []
-            for item in json:
-                item_type = item['type']
-                item_id = item['id']
-                if item_type == 'File':
-                    file_item = File()
-                    self.items[item_id] = file_item
-
-                    task = functools.partial(file_item.get, item['url'], get_json)
+            for raw_item in json:
+                if results := get_item_from_raw(raw_item, get_json):
+                    item, task = results
                     tasks.append(task)
-                elif item_type == 'SubHeader':
-                    # Note: Just text
-                    #print(f"{item_type}: {self.items_url}")
-                    pass
-                elif item_type == 'Assignment':
-                    assignment_item = Assignment()
-                    self.items[item_id] = assignment_item
-
-                    task = functools.partial(assignment_item.get, item['url'], get_json)
-                    tasks.append(task)
-                    pass
-                elif item_type == 'Page':
-                    page_item = Page()
-                    self.items[item_id] = page_item
-
-                    task = functools.partial(page_item.get, item['url'], get_json)
-                    tasks.append(task)
-                elif item_type == 'ExternalUrl':
-                    # Note: Links to stuff like Discord
-                    #print(f"{item_type}: {self.items_url}")
-                    pass
-                else:
-                        print(item_type)
+                    self.items[raw_item['id']] = item
             return tasks
