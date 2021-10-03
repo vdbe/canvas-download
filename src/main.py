@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 import json
 import logging
+import time
 
 from lib.canvasobjects.instance import Instance
 
 def main(**kwargs: dict) -> None:
     canvas_endpoint = kwargs['canvas']['endpoint']
-    canvas_bearer_token = kwargs['canvas']['bearer_token']
+    canvas_bearer_tokens = kwargs['canvas']['bearer_tokens']
 
-    instance = Instance(canvas_endpoint, canvas_bearer_token)
+    start = time.time()
+
+    instance = Instance(canvas_endpoint, canvas_bearer_tokens)
     instance.start_gather()
 
     if logging.root.level <= logging.INFO:
+        total_time = time.time() - start
         amount_of_courses = len(instance.courses.keys())
         amount_of_modules = 0
         amount_of_items = 0
@@ -28,6 +32,7 @@ def main(**kwargs: dict) -> None:
 
         amount_of_items = items_in_courses + items_in_modules
 
+        logging.info(f"time: {total_time}")
         logging.info(f"courses: {amount_of_courses}")
         logging.info(f"modules: {amount_of_modules}")
         logging.info(f"items: {amount_of_items}")

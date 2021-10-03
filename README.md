@@ -15,7 +15,9 @@ Create `config.json` file in the root with the following content:
 {
   "canvas": {
     "endpoint": "<canvas endpoint>",
-    "bearer_token": "<API access token>"
+    "bearer_tokens": [
+      "<API access token>"
+    ]
   }
 }
 ```
