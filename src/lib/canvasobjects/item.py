@@ -2,27 +2,53 @@
 from collections.abc import Callable
 from typing import Union
 
-class Item:
-    def __init__(self, data: dict) -> None:
-        self.data = data
-
-        # Other interesting values
-        #self.url = url
-
-    async def gather(self, get_json: Callable[[str], Union[list[dict], None]]) -> None:
-        return
-        print(self.title)
-        #await asyncio.sleep(1)
-        #await self.gather_items(get_json)
-
-        #for task in asyncio.as_completed([module.gather(get_json) for module in self.module]):
-        #    await task
-        #
-
-    async def gather_something(self, get_json) -> None:
+class File():
+    def __init__(self) -> None:
         pass
-        #json = await get_json(self.url, full=True)
 
-        #for item in json:
-        #    self.items.append(Item(item['id'], item['title'], item['type'], item['url']))
+    async def get(self, url: str, get_json: Callable[[str], Union[list[dict], None]]) -> None:
+        json = await get_json(url, full = True)
 
+        if json:
+            self.id = json['id']
+            self.filename = json['filename']
+            self.display_name = json['display_name']
+            self.conten_type = json['content-type']
+            self.url = json['url']
+            self.updated_at = json['updated_at']
+            # TODO: Look at difference between updated_at and modified_at
+            self.modified_at = json['modified_at']
+
+class Page():
+    def __init__(self) -> None:
+        pass
+
+    async def get(self, url: str, get_json: Callable[[str], Union[list[dict], None]]) -> None:
+        json = await get_json(url, full = True)
+
+        if json:
+            self.title = json['title']
+            self.updated_at = json['updated_at']
+
+            if json['locked_for_user'] == True:
+                return
+
+            # TODO: extract items from body
+            body = json['body']
+
+class Assignment():
+    def __init__(self) -> None:
+        pass
+
+    async def get(self, url: str, get_json: Callable[[str], Union[list[dict], None]]) -> None:
+        json = await get_json(url, full = True)
+
+        if json:
+            self.name = json['name']
+            self.updated_at = json['updated_at']
+
+            if json['locked_for_user'] == True:
+                return
+
+            # TODO: extract items from description
+            description = json['description']
