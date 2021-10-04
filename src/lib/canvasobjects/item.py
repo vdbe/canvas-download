@@ -15,7 +15,7 @@ class File():
             self.id = json['id']
             self.filename = json['filename']
             self.display_name = json['display_name']
-            self.conten_type = json['content-type']
+            self.content_type = json['content-type']
             self.url = json['url']
             self.updated_at = json['updated_at']
             # TODO: Look at difference between updated_at and modified_at
@@ -108,6 +108,12 @@ def get_item_from_raw(raw_item, get_json: Callable[[str], Union[list[dict], None
             elif item_type == 'ExternalUrl':
                 # NOTE: Links to stuff like Discord
                 #print(f"{item_type}: {self.items_url}")
+                return
+            elif item_type == 'Discussion':
+                print(f"{item_type}: {raw_item}")
+                return
+            elif item_type == 'ExternalTool':
+                print(f"{item_type}: {raw_item}")
                 return
             else:
                     print(item_type)
