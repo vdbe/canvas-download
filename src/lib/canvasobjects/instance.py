@@ -4,26 +4,36 @@ import aiohttp
 from typing import Union
 import logging
 import time
+import functools
 
-from lib.canvasobjects.course import Course
+#from . import Container, Course
+from .container import Container
+from .course import Course
 
-class Instance:
+class Instance(Container):
+    TYPE = 2
+
     def __init__(self, url: str, bearer_tokens: list[str]) -> None:
-        self.url = url
+        super().__init__(0, self.TYPE, 0)
         self.bearer_tokens = bearer_tokens
-        self.courses = dict()
+        self.url = url
+        self.parent_id = 0
 
-        #self.requests = 0
+        db = self.db = dict()
+
+        # TODO: Dont hardcode
+        for i in range(3, 7+1):
+            db[i] = dict()
+
+        self.requests = 0
 
 
     def start_gather(self) -> None:
         self.session_amount = len(self.bearer_tokens)
         self.session_index = 0
-        self.session = list()
+        self.sessions = list()
 
         asyncio.run(self.gather())
-
-        #logging.info(f"requests: {self.requests}")
 
     async def gather(self) -> None:
         # Setup
@@ -31,35 +41,44 @@ class Instance:
         self.session = self.sessions[self.session_index]
 
         # Get everything
-        await self.gather_courses()
+        tasks = await self.gather_courses()
 
-        # NOTE: Maybe replace with functool.partial
-        # to avoid adding every parameter here
-        get_json = lambda endpoint, full=False, params=None: self.get_json(endpoint, full=full, params=params)
-        for task in asyncio.as_completed([course.gather(get_json) for course in self.courses.values()]):
-            await task
+        if tasks:
+            # NOTE: Maybe replace with functool.partial
+            # to avoid adding every parameter here
+            get_json = lambda endpoint, full=False, params=None: self.get_json(endpoint, full=full, params=params)
+            tasks = [task(get_json, self.db) for task in tasks]
+            await asyncio.gather(*tasks)
 
         # Shutdown
         for task in asyncio.as_completed([session.close() for session in self.sessions]):
             await task
 
-    async def gather_courses(self) -> None:
+    async def gather_courses(self):
         params = {
             'per_page': '500'
         }
         json = await self.get_json("/courses", params=params)
 
         if json:
-            for course in json:
-                course_id = course['id']
-                self.courses[course_id] = Course(course_id, course['name'])
+            tasks = list()
+
+
+            for raw_course in json:
+                course_id = raw_course['id']
+                course = Course(course_id, self.TYPE, self.parent_id, raw_course['name'])
+                self.db[Course.TYPE][course_id] = course
+                tasks.append(functools.partial(course.gather))
+
+            return tasks
+
 
     async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None) -> Union[list[dict], None]:
         if full == False:
             endpoint = f"{self.url}/api/v1/{endpoint}"
 
         async with self.session.get(endpoint, params=params) as resp:
-            #self.requests += 1
+            self.requests += 1
 
             #bucket = float(resp.headers['X-Rate-Limit-Remaining'])
             #if bucket < 400:
@@ -72,6 +91,8 @@ class Instance:
 
             if resp.status == 200:
                 return await resp.json()
+            else:
+                print(resp.status, await resp.text(), index, endpoint)
             #elif resp.status == 403:
             #    logging.error(f"403: sessions {self.session_index} -> API-bucket {bucket}")
             #    return None

@@ -19,10 +19,6 @@ Create `config.json` file in the root with the following content:
       "<API access token>"
     ]
   },
-  "db": {
-    "path": "data/db/db.db",
-    "build_script_path": "data/db/build.sql"
-  }
 }
 ```
 [How do I obtain an API access token in the Canvas Data Portal? ](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-obtain-an-API-access-token-in-the-Canvas-Data-Portal/ta-p/157)

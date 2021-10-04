@@ -4,37 +4,32 @@ from collections.abc import Callable
 from typing import Union
 import functools
 
-from lib.canvasobjects.item import File, Page, Assignment, get_item_from_raw
+#from lib.canvasobjects.item import File, Page, Assignment, get_item_from_raw
 
-class Module:
-    def __init__(self, id, name, items_url, course_id=None) -> None:
-        self.id = id
-        self.name = name
-        self.items_url = items_url
+#from . import Container, Item
+from .container import Container
+from .item import Item
 
-        self.course_id = course_id
+class Module(Container):
+    TYPE = 4
+    def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name: str):
+        super().__init__(object_id, parent_type, parent_id)
+        self.object_name = object_name
 
-        self.items = dict()
-
-        # Some other interesting values
-        #self.items_count = items_count
-
-    async def gather(self, get_json: Callable[[str], Union[list[dict], None]]) -> None:
-        tasks = await self.gather_items(get_json)
+    async def gather(self, get_json: Callable[[str], Union[list[dict], None]], db: dict) -> None:
+        tasks = await self.gather_items(get_json, db)
 
         if tasks:
-            for task in asyncio.as_completed([task() for task in tasks]):
+            for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
                 await task
 
-    async def gather_items(self, get_json: Callable[[str], Union[list[dict], None]]):
-        #print(self.items_url)
-        json = await get_json(self.items_url, full=True)
+    async def gather_items(self, get_json: Callable[[str], Union[list[dict], None]], db: dict):
+        json = await get_json(f"courses/{self.parent_id}/modules/{self.object_id}/items")
 
         if json:
-            tasks = []
+            tasks = list()
             for raw_item in json:
-                if results := get_item_from_raw(raw_item, get_json):
+                if results := Item.get_correct_object(self.TYPE, self.object_id, raw_item):
                     item, task = results
                     tasks.append(task)
-                    self.items[raw_item['id']] = item
             return tasks
