@@ -28,7 +28,7 @@ class Course(Container):
 
         if json:
             html = json['syllabus_body']
-            self.items, tasks = Item.get_correct_objects_from_html(self.TYPE, self.parent_id, html)
+            self.items, tasks = Item.get_correct_objects_from_html(self.TYPE, self.object_id, html)
 
             for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
                 await task

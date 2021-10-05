@@ -3,6 +3,8 @@ from collections.abc import Callable
 from typing import Union
 from html.parser import HTMLParser
 import functools
+from pathlib import Path
+import urllib
 
 #from . import CanvasObject, Container
 from .canvasobject import CanvasObject
@@ -113,6 +115,24 @@ class File(CanvasObject):
     def __init__(self, object_id, parent_type, parent_id):
         super().__init__(object_id, parent_type, parent_id)
 
+    def download(self, path: Path):
+        # Check path create if not exists
+        if not path.exists():
+            path.mkdir(parents=True, exist_ok=True)
+
+        path = path.joinpath(self.display_name)
+
+        # TODO: use the `reporthook` from urlretrieve for more accurate download progression
+        print(path)
+        try:
+            urllib.request.urlretrieve(self.url, filename=path)
+        except urllib.error.HTTPError as e:
+            print(path, e)
+
+        return str(path), self.byte_size
+
+
+
     async def gather(self, url: str, get_json, db: dict) -> None:
         json = await get_json(url, full = True)
 
@@ -121,12 +141,22 @@ class File(CanvasObject):
             self.filename = json['filename']
             self.display_name = json['display_name']
             self.content_type = json['content-type']
+            self.byte_size = json['size']
+
             self.url = json['url']
+
             self.updated_at = json['updated_at']
             # TODO: Look at difference between updated_at and modified_at
             self.modified_at = json['modified_at']
 
             db[self.TYPE][file_id] = self
+
+            if self.url:
+                self.locked = False
+            else:
+                self.url = "{url.split('courses')[0]}/{file_id}/download?download_frd=1&verifier={json['uuid']}"
+                self.locked = True
+
 
 class Page(Container):
     TYPE = 6

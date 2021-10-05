@@ -19,6 +19,11 @@ Create `config.json` file in the root with the following content:
       "<API access token>"
     ]
   },
+  "download": {
+    "parallel_downloads": 10,
+    "download_locked": true,
+    "path": "./downloads"
+  }
 }
 ```
 [How do I obtain an API access token in the Canvas Data Portal? ](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-obtain-an-API-access-token-in-the-Canvas-Data-Portal/ta-p/157)
