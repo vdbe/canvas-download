@@ -19,6 +19,10 @@ Create `config.json` file in the root with the following content:
       "<API access token>"
     ]
   },
+  "db": {
+    "directory": "data/db",
+    "name": "db.pickle"
+  },
   "download": {
     "parallel_downloads": 10,
     "download_locked": true,

@@ -6,6 +6,7 @@ import functools
 from pathlib import Path
 import urllib
 from datetime import datetime
+import logging
 
 #from . import CanvasObject, Container
 from .canvasobject import CanvasObject
@@ -105,6 +106,8 @@ class File(CanvasObject):
         super().__init__(object_id, parent_type, parent_id)
 
     def download(self, path: Path):
+        #print(f"download: {path}/{self.display_name}")
+
         # Check path create if not exists
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
@@ -114,8 +117,11 @@ class File(CanvasObject):
         try:
             # TODO: use the `reporthook` from urlretrieve for more accurate download progression
             urllib.request.urlretrieve(self.url, filename=path)
+            self.last_download = datetime.now().timestamp()
         except urllib.error.HTTPError as e:
             print(path, e)
+            logging.e
+            logging.error("dowload failed: {self.display_name}, {e}, {self.url}")
 
         return str(path), self.byte_size
 
@@ -125,7 +131,7 @@ class File(CanvasObject):
         json = await get_json(url, full = True)
 
         if json:
-            file_id = self.id = json['id']
+            object_id = self.object_id = json['id']
             self.filename = json['filename']
             self.display_name = json['display_name']
             self.content_type = json['content-type']
@@ -133,18 +139,18 @@ class File(CanvasObject):
 
             self.url = json['url']
 
-            self.updated_at = int(datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp())
+            self.updated_at = datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp()
             # TODO: Look at difference between updated_at and modified_at
-            self.modified_at= int(datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp())
+            self.modified_at = datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp()
 
-            self.last_download = None
+            self.last_download = 0
 
-            db[self.TYPE][file_id] = self
+            db[self.TYPE][object_id] = self
 
             if self.url:
                 self.locked = False
             else:
-                self.url = f"{url.split('courses')[0]}/{file_id}/download?download_frd=1&verifier={json['uuid']}"
+                self.url = f"{url.split('api/v1/')[0]}/files/{object_id}/download?download_frd=1&verifier={json['uuid']}"
                 self.locked = True
 
 

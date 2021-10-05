@@ -11,29 +11,56 @@ from lib.canvasobjects.instance import Instance
 from lib.canvasobjects.item import File, Page, Assignment
 from lib.canvasobjects.course import Course
 from lib.canvasobjects.module import Module
+from datetime import datetime
 
 def main(**kwargs: dict) -> None:
     canvas_endpoint = kwargs['canvas']['endpoint']
     canvas_bearer_tokens = kwargs['canvas']['bearer_tokens']
-
-
-    start = time.time()
+    db_dir = kwargs['db']['directory']
+    db_name = kwargs['db']['name']
 
     # Scrape Canvas
+    logging.info(f"start gather...")
     instance = Instance(canvas_endpoint, canvas_bearer_tokens)
+    start_time = time.time()
     instance.start_gather()
-
-    # Statistics
-    total_time = time.time() - start
+    logging.info(f"gather time: {time.time() - start_time}")
 
     db = instance.db
+
+    logging.info(f"requests: {instance.requests}")
+    logging.info(f"courses: {len(db[Course.TYPE])}")
+    logging.info(f"modules: {len(db[Module.TYPE])}")
+    logging.info(f"pages: {len(db[Page.TYPE])}")
+    logging.info(f"assigments: {len(db[Assignment.TYPE])}")
+    logging.info(f"files: {len(db[File.TYPE])}")
+    logging.info(f"loading db...")
+
+    # Make sure db folder exists
+    Path(db_dir).mkdir(parents=True, exist_ok=True)
+    old_db = dict()
+    db_file = Path(db_dir, db_name)
+    if db_file.is_file():
+        with open(str(db_file), 'rb') as handle:
+            old_db = pickle.load(handle)
+    else:
+        old_db = db
 
     path_start = kwargs['download']['path']
     total_byte_size = 0
     downloads = list()
     safe = not kwargs['download']['download_locked']
 
-    for file in db[File.TYPE].values():
+    logging.info(f"comparing timstamps...")
+    files = db[File.TYPE]
+    old_files = old_db[File.TYPE]
+    for file in files.values():
+
+        old_file = old_files[file.object_id]
+        if old_file.last_download > file.modified_at:
+            file.last_download = old_file.last_download
+            continue
+
         if safe and file.locked:
             continue
 
@@ -52,22 +79,26 @@ def main(**kwargs: dict) -> None:
         path = Path(path_start, *path_stack[::-1])
         downloads.append(functools.partial(file.download, path))
 
-    # Print stats
-    logging.info(f"gather time: {total_time}")
-    logging.info(f"requests: {instance.requests}")
-    logging.info(f"courses: {len(db[Course.TYPE])}")
-    logging.info(f"modules: {len(db[Module.TYPE])}")
-    logging.info(f"pages: {len(db[Page.TYPE])}")
-    logging.info(f"assigments: {len(db[Assignment.TYPE])}")
-    logging.info(f"files: {len(db[File.TYPE])}")
-    logging.info(f"total file size: {sizeof_fmt(total_byte_size)}")
 
-    parallel_downloads = kwargs['download']['parallel_downloads']
-    logging.info(f"parallel downloads: {parallel_downloads}")
+    if len(downloads):
+        logging.info(f"files to downloads: {len(downloads)}")
+        logging.info(f"total download size: {sizeof_fmt(total_byte_size)}")
 
-    for _ in ThreadPool(parallel_downloads).imap_unordered(lambda f: f(), downloads):
-        pass
+        parallel_downloads = kwargs['download']['parallel_downloads']
+        logging.info(f"parallel downloads: {parallel_downloads}")
 
+        logging.info(f"starting downloads...")
+        start_time = time.time()
+        for _ in ThreadPool(parallel_downloads).imap_unordered(lambda f: f(), downloads):
+            pass
+
+        logging.info(f"download time: {time.time() - start_time}")
+    else:
+        logging.info(f"all files up-to-date")
+
+    logging.info(f"commiting db...")
+    with open(db_file, 'wb') as handle:
+        pickle.dump(db, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # SRC: https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
 def sizeof_fmt(num, suffix="B"):
@@ -76,6 +107,7 @@ def sizeof_fmt(num, suffix="B"):
             return f"{num:3.1f}{unit}{suffix}"
         num /= 1024.0
     return f"{num:.1f}Yi{suffix}"
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
