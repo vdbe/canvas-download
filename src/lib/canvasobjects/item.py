@@ -5,6 +5,7 @@ from html.parser import HTMLParser
 import functools
 from pathlib import Path
 import urllib
+from datetime import datetime
 
 #from . import CanvasObject, Container
 from .canvasobject import CanvasObject
@@ -84,30 +85,18 @@ class MyHTMLParser(HTMLParser):
         if tag != "a":
             return
 
-        title = None
-
         data_api_endpoint = None
-        data_return_type = None
+        data_api_returntype = None
         for attr in attrs:
             if attr[0] == 'data-api-endpoint':
                 data_api_endpoint = attr[1]
             elif attr[0] == 'data-api-returntype':
-                data_return_type = attr[1]
-            elif attr[0] == 'title':
-                title = attr[1]
-            else:
-                #print(attr[0])
-                pass
+                data_api_returntype = attr[1]
 
-        if data_api_endpoint == None or data_return_type == None:
-            #print(attrs)
+        if data_api_endpoint == None or data_api_returntype == None:
             return
 
-        if title and data_return_type == 'File':
-            #print(title)
-            pass
-
-        self.raw_items.append((data_api_endpoint, data_return_type))
+        self.raw_items.append((data_api_endpoint, data_api_returntype))
 
 class File(CanvasObject):
     TYPE = 5
@@ -122,9 +111,8 @@ class File(CanvasObject):
 
         path = path.joinpath(self.display_name)
 
-        # TODO: use the `reporthook` from urlretrieve for more accurate download progression
-        print(path)
         try:
+            # TODO: use the `reporthook` from urlretrieve for more accurate download progression
             urllib.request.urlretrieve(self.url, filename=path)
         except urllib.error.HTTPError as e:
             print(path, e)
@@ -145,16 +133,18 @@ class File(CanvasObject):
 
             self.url = json['url']
 
-            self.updated_at = json['updated_at']
+            self.updated_at = int(datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp())
             # TODO: Look at difference between updated_at and modified_at
-            self.modified_at = json['modified_at']
+            self.modified_at= int(datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp())
+
+            self.last_download = None
 
             db[self.TYPE][file_id] = self
 
             if self.url:
                 self.locked = False
             else:
-                self.url = "{url.split('courses')[0]}/{file_id}/download?download_frd=1&verifier={json['uuid']}"
+                self.url = f"{url.split('courses')[0]}/{file_id}/download?download_frd=1&verifier={json['uuid']}"
                 self.locked = True
 
 
@@ -170,9 +160,6 @@ class Page(Container):
         if json:
             object_id = self.object_id = json['page_id']
             self.object_name = json['title']
-
-            # TODO: check is this indeed not needed
-            #self.updated_at = json['updated_at']
 
             db[self.TYPE][object_id] = self
 
@@ -201,6 +188,5 @@ class Assignment(Container):
 
             db[self.TYPE][object_id] = self
 
-            # TODO: extract items from description
             description = json['description']
             Item.get_correct_objects_from_html(self.TYPE, self.object_id, description)

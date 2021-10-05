@@ -46,9 +46,8 @@ def main(**kwargs: dict) -> None:
             container = db[container_type][container_id]
             container_type = container.parent_type
             container_id = container.parent_id
-            container_name = container.object_name
 
-            path_stack.append(container_name)
+            path_stack.append(container.object_name)
 
         path = Path(path_start, *path_stack[::-1])
         downloads.append(functools.partial(file.download, path))
