@@ -119,8 +119,6 @@ class File(CanvasObject):
             urllib.request.urlretrieve(self.url, filename=path)
             self.last_download = datetime.now().timestamp()
         except urllib.error.HTTPError as e:
-            print(path, e)
-            logging.e
             logging.error("dowload failed: {self.display_name}, {e}, {self.url}")
 
         return str(path), self.byte_size
