@@ -56,7 +56,11 @@ def main(**kwargs: dict) -> None:
     old_files = old_db[File.TYPE]
     for file in files.values():
 
-        old_file = old_files[file.object_id]
+        try:
+            old_file = old_files[file.object_id]
+        except KeyError:
+            old_file = file
+
         if old_file.last_download > file.modified_at:
             file.last_download = old_file.last_download
             continue

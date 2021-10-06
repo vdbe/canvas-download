@@ -73,7 +73,7 @@ class Instance(Container):
             return tasks
 
 
-    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None) -> Union[list[dict], None]:
+    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None, repeat=True) -> Union[list[dict], None]:
         if full == False:
             endpoint = f"{self.url}/api/v1/{endpoint}"
 
@@ -86,13 +86,18 @@ class Instance(Container):
             #    self.session = self.sessions[self.session_index]
             #    time.sleep(0.1)
 
-            index = self.session_index = (self.session_index + 1) % self.session_amount
-            self.session = self.sessions[index]
+            #index = self.session_index = (self.session_index + 1) % self.session_amount
+            #self.session = self.sessions[index]
 
             if resp.status == 200:
                 return await resp.json()
+            elif resp.status == 403 and repeat:
+                for i in range(10):
+                    time.sleep(.1 * i)
+                    res = await self.get_json(endpoint, params=params, full=True, repeat=False)
+                    if res:
+                        return res
+                logging.error(f"403: sessions {self.session_index}")
             else:
+                return
                 print(resp.status, await resp.text(), index, endpoint)
-            #elif resp.status == 403:
-            #    logging.error(f"403: sessions {self.session_index} -> API-bucket {bucket}")
-            #    return None
