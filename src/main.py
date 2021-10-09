@@ -6,22 +6,17 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import functools
 import pickle
+from lib.canvasobjects.module import Module
 
 from lib.canvasobjects.instance import Instance
 from lib.canvasobjects.item import File, Page, Assignment
 from lib.canvasobjects.course import Course
-from lib.canvasobjects.module import Module
-from datetime import datetime
+from lib.config import Config
 
-def main(**kwargs: dict) -> None:
-    canvas_endpoint = kwargs['canvas']['endpoint']
-    canvas_bearer_tokens = kwargs['canvas']['bearer_tokens']
-    db_dir = kwargs['db']['directory']
-    db_name = kwargs['db']['name']
-
+def main(config: Config) -> None:
     # Scrape Canvas
     logging.info(f"start gather...")
-    instance = Instance(canvas_endpoint, canvas_bearer_tokens)
+    instance = Instance(config.canvas.endpoint, config.canvas.bearer_tokens)
     start_time = time.time()
     instance.start_gather()
     logging.info(f"gather time: {time.time() - start_time}")
@@ -37,25 +32,24 @@ def main(**kwargs: dict) -> None:
     logging.info(f"loading db...")
 
     # Make sure db folder exists
-    Path(db_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.db.directory).mkdir(parents=True, exist_ok=True)
     old_db = dict()
-    db_file = Path(db_dir, db_name)
+    db_file = Path(config.db.directory, config.db.name)
     if db_file.is_file():
         with open(str(db_file), 'rb') as handle:
             old_db = pickle.load(handle)
     else:
         old_db = db
 
-    path_start = kwargs['download']['path']
+    path_start = config.download.path
     total_byte_size = 0
     downloads = list()
-    safe = not kwargs['download']['download_locked']
+    safe = not config.download.download_locked
 
     logging.info(f"comparing timstamps...")
     files = db[File.TYPE]
     old_files = old_db[File.TYPE]
     for file in files.values():
-
         try:
             old_file = old_files[file.object_id]
         except KeyError:
@@ -88,7 +82,7 @@ def main(**kwargs: dict) -> None:
         logging.info(f"files to downloads: {len(downloads)}")
         logging.info(f"total download size: {sizeof_fmt(total_byte_size)}")
 
-        parallel_downloads = kwargs['download']['parallel_downloads']
+        parallel_downloads = config.download.parallel_downloads
         logging.info(f"parallel downloads: {parallel_downloads}")
 
         logging.info(f"starting downloads...")
@@ -114,8 +108,10 @@ def sizeof_fmt(num, suffix="B"):
 
 
 if __name__ == "__main__":
+
     logging.basicConfig(level=logging.DEBUG)
     with open('config.json') as fp:
         cfg = json.load(fp)
 
-    main(**cfg)
+    config = Config(**cfg)
+    main(config)
