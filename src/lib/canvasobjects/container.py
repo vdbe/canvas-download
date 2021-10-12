@@ -5,5 +5,5 @@ from .canvasobject import CanvasObject
 class Container(CanvasObject):
     TYPE = 1
 
-    def __init__(self, object_id, parent_type, parent_id):
-        super().__init__(object_id, parent_type, parent_id)
+    def __init__(self, object_id, parent_type, parent_id, object_name=None):
+        super().__init__(object_id, parent_type, parent_id, object_name=None)

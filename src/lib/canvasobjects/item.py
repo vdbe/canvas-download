@@ -102,24 +102,56 @@ class MyHTMLParser(HTMLParser):
 class File(CanvasObject):
     TYPE = 5
 
-    def __init__(self, object_id, parent_type, parent_id):
-        super().__init__(object_id, parent_type, parent_id)
+    def __init__(self, object_id, parent_type, parent_id, object_name=None):
+        super().__init__(object_id, parent_type, parent_id, object_name)
+        self.last_download = 0
+
+    @classmethod
+    def from_json_dict(cls, json_dict):
+        c = cls(json_dict['object_id'], json_dict['parent_type'], json_dict['parent_id'], json_dict['object_name'])
+        c.filename = json_dict['filename']
+        c.content_type = json_dict['content_type']
+        c.byte_size = json_dict['byte_size']
+        c.url = json_dict['url']
+        c.updated_at = json_dict['updated_at']
+        c.modified_at = json_dict['modified_at']
+        c.locked = json_dict['locked']
+        c.last_download = json_dict['last_download']
+        return c
+
+    def to_json(self):
+        json = {
+            "parent_type": self.parent_type,
+            "parent_id": self.parent_id,
+            "object_id": self.object_id,
+            "object_name": self.object_name,
+            "filename": self.filename,
+            "content_type": self.content_type,
+            "byte_size": self.byte_size,
+            "url": self.url,
+            "updated_at": self.updated_at,
+            "modified_at": self.modified_at,
+            "locked": self.locked,
+            "last_download": self.last_download,
+        }
+        return json
 
     def download(self, path: Path):
-        #print(f"download: {path}/{self.display_name}")
+        #print(f"download: {path}/{self.object_name}")
 
         # Check path create if not exists
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
 
-        path = path.joinpath(self.display_name)
+        #print(self.object_name)
+        path = path.joinpath(self.object_name)
 
         try:
             # TODO: use the `reporthook` from urlretrieve for more accurate download progression
             urllib.request.urlretrieve(self.url, filename=path)
-            self.last_download = datetime.now().timestamp()
+            self.last_download = int(datetime.now().timestamp())
         except urllib.error.HTTPError as e:
-            logging.error("dowload failed: {self.display_name}, {e}, {self.url}")
+            logging.error("dowload failed: {self.object_name}, {e}, {self.url}")
 
         return str(path), self.byte_size
 
@@ -131,15 +163,16 @@ class File(CanvasObject):
         if json:
             object_id = self.object_id = json['id']
             self.filename = json['filename']
-            self.display_name = json['display_name']
+            self.object_name = json['display_name']
             self.content_type = json['content-type']
             self.byte_size = json['size']
 
             self.url = json['url']
 
-            self.updated_at = datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp()
+            epoch = int(datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp())
+            self.updated_at = epoch
             # TODO: Look at difference between updated_at and modified_at
-            self.modified_at = datetime.strptime(json['updated_at'], "%Y-%m-%dT%H:%M:%S%z").timestamp()
+            self.modified_at = epoch
 
             self.last_download = 0
 
@@ -152,11 +185,12 @@ class File(CanvasObject):
                 self.locked = True
 
 
+
 class Page(Container):
     TYPE = 6
 
-    def __init__(self, object_id, parent_type, parent_id):
-        super().__init__(object_id, parent_type, parent_id)
+    def __init__(self, object_id, parent_type, parent_id, object_name=None):
+        super().__init__(object_id, parent_type, parent_id, object_name=None)
 
     async def gather(self, url: str, get_json: Callable[[str], Union[list[dict], None]], db: dict) -> None:
         json = await get_json(url, full = True)
@@ -176,8 +210,8 @@ class Page(Container):
 class Assignment(Container):
     TYPE = 7
 
-    def __init__(self, object_id, parent_id, name):
-        super().__init__(object_id, parent_id, name)
+    def __init__(self, object_id, parent_type, parent_id, object_name=None):
+        super().__init__(object_id, parent_type, parent_id, object_name)
 
     async def gather(self, url: str, get_json: Callable[[str], Union[list[dict], None]], db) -> None:
         json = await get_json(url, full = True)

@@ -6,8 +6,9 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import functools
 import pickle
-from lib.canvasobjects.module import Module
+from json import JSONEncoder
 
+from lib.canvasobjects.module import Module
 from lib.canvasobjects.instance import Instance
 from lib.canvasobjects.item import File, Page, Assignment
 from lib.canvasobjects.course import Course
@@ -36,10 +37,28 @@ def main(config: Config) -> None:
     old_db = dict()
     db_file = Path(config.db.directory, config.db.name)
     if db_file.is_file():
-        with open(str(db_file), 'rb') as handle:
-            old_db = pickle.load(handle)
+        #with open(str(db_file), 'rb') as handle:
+        #    old_db = pickle.load(handle)
+        with open(db_file, "r") as f:
+            json_db = json.loads(f.read())
+
+        object_class_dict = {
+            Instance.TYPE: Instance.from_json_dict,
+            Course.TYPE: Course.from_json_dict,
+            Module.TYPE: Module.from_json_dict,
+            File.TYPE: File.from_json_dict,
+            Page.TYPE: Page.from_json_dict,
+            Assignment.TYPE: Assignment.from_json_dict,
+        }
+
+        for object_type in map(int, json_db.keys()):
+            old_db[object_type] = dict()
+            for canvas_object in json_db[str(object_type)]:
+                o = object_class_dict[object_type](canvas_object)
+                old_db[object_type][o.object_id] = o
     else:
         old_db = db
+
 
     path_start = config.download.path
     total_byte_size = 0
@@ -95,8 +114,25 @@ def main(config: Config) -> None:
         logging.info(f"all files up-to-date")
 
     logging.info(f"commiting db...")
-    with open(db_file, 'wb') as handle:
-        pickle.dump(db, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    #with open(db_file, 'wb') as handle:
+    #    pickle.dump(db, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def _default(self, obj):
+        return getattr(obj.__class__, "to_json", _default.default)(obj)
+
+    # SRC: https://stackoverflow.com/a/38764817
+    _default.default = JSONEncoder().default
+    JSONEncoder.default = _default
+
+    d = dict()
+    for key in old_db.keys():
+        d[key] = list(db[key].values())
+
+    json_db = json.dumps(d)
+    #print(json_db)
+    with open(db_file, "w") as f:
+        json.dump(d, f, indent=4)
+
 
 # SRC: https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
 def sizeof_fmt(num, suffix="B"):
