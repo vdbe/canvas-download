@@ -21,7 +21,7 @@ Create `config.json` file in the root with the following content:
   },
   "db": {
     "directory": "data/db",
-    "name": "db.pickle"
+    "name": "db.json"
   },
   "download": {
     "parallel_downloads": 10,

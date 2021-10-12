@@ -20,11 +20,12 @@ def main(config: Config) -> None:
     instance = Instance(config.canvas.endpoint, config.canvas.bearer_tokens)
     start_time = time.time()
     instance.start_gather()
-    logging.info(f"gather time: {time.time() - start_time}")
+    logging.info(f"gather time: {time.time() - start_time:.2f}s")
 
     db = instance.db
 
-    logging.info(f"requests: {instance.requests}")
+    logging.info(f"uniq requests: {instance.requests - instance.dup_requests}")
+    logging.info(f"dup requests: {instance.dup_requests}")
     logging.info(f"courses: {len(db[Course.TYPE])}")
     logging.info(f"modules: {len(db[Module.TYPE])}")
     logging.info(f"pages: {len(db[Page.TYPE])}")
@@ -37,8 +38,6 @@ def main(config: Config) -> None:
     old_db = dict()
     db_file = Path(config.db.directory, config.db.name)
     if db_file.is_file():
-        #with open(str(db_file), 'rb') as handle:
-        #    old_db = pickle.load(handle)
         with open(db_file, "r") as f:
             json_db = json.loads(f.read())
 
@@ -91,7 +90,7 @@ def main(config: Config) -> None:
             container_type = container.parent_type
             container_id = container.parent_id
 
-            path_stack.append(container.object_name)
+            path_stack.append(container.object_name.replace('/', '-'))
 
         path = Path(path_start, *path_stack[::-1])
         downloads.append(functools.partial(file.download, path))
@@ -109,13 +108,11 @@ def main(config: Config) -> None:
         for _ in ThreadPool(parallel_downloads).imap_unordered(lambda f: f(), downloads):
             pass
 
-        logging.info(f"download time: {time.time() - start_time}")
+        logging.info(f"download time: {time.time() - start_time:.2f}")
     else:
         logging.info(f"all files up-to-date")
 
     logging.info(f"commiting db...")
-    #with open(db_file, 'wb') as handle:
-    #    pickle.dump(db, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def _default(self, obj):
         return getattr(obj.__class__, "to_json", _default.default)(obj)
@@ -131,7 +128,7 @@ def main(config: Config) -> None:
     json_db = json.dumps(d)
     #print(json_db)
     with open(db_file, "w") as f:
-        json.dump(d, f, indent=4)
+        json.dump(d, f)
 
 
 # SRC: https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size

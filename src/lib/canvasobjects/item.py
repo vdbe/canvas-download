@@ -7,6 +7,7 @@ from pathlib import Path
 import urllib
 from datetime import datetime
 import logging
+import asyncio
 
 #from . import CanvasObject, Container
 from .canvasobject import CanvasObject
@@ -144,12 +145,13 @@ class File(CanvasObject):
             path.mkdir(parents=True, exist_ok=True)
 
         #print(self.object_name)
-        path = path.joinpath(self.object_name)
+        path = path.joinpath(self.object_name.replace('/', '-'))
 
         try:
             # TODO: use the `reporthook` from urlretrieve for more accurate download progression
             urllib.request.urlretrieve(self.url, filename=path)
             self.last_download = int(datetime.now().timestamp())
+            pass
         except urllib.error.HTTPError as e:
             logging.error("dowload failed: {self.object_name}, {e}, {self.url}")
 
@@ -205,7 +207,10 @@ class Page(Container):
                 return
 
             body = json['body']
-            Item.get_correct_objects_from_html(self.TYPE, self.object_id, body)
+            if results := Item.get_correct_objects_from_html(self.TYPE, self.object_id, body):
+                _, tasks = results
+                for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
+                    await task
 
 class Assignment(Container):
     TYPE = 7
@@ -227,4 +232,7 @@ class Assignment(Container):
             db[self.TYPE][object_id] = self
 
             description = json['description']
-            Item.get_correct_objects_from_html(self.TYPE, self.object_id, description)
+            if results := Item.get_correct_objects_from_html(self.TYPE, self.object_id, description):
+                _, tasks = results
+                for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
+                    await task

@@ -26,6 +26,7 @@ class Instance(Container):
             db[i] = dict()
 
         self.requests = 0
+        self.dup_requests = 0
 
 
     def start_gather(self) -> None:
@@ -93,6 +94,7 @@ class Instance(Container):
                 return await resp.json()
             elif resp.status == 403 and repeat:
                 for i in range(10):
+                    self.dup_requests += 1
                     time.sleep(.1 * i)
                     res = await self.get_json(endpoint, params=params, full=True, repeat=False)
                     if res:
@@ -100,4 +102,4 @@ class Instance(Container):
                 logging.error(f"403: sessions {self.session_index}")
             else:
                 return
-                print(resp.status, await resp.text(), index, endpoint)
+                print(resp.status, await resp.text(), endpoint)
