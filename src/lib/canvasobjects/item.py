@@ -57,7 +57,6 @@ class Item():
         elif item_type == 'Quiz':
             #print(f"{item_type}: {raw_item}")
             return
-
         else:
                 print(item_type)
                 return
@@ -75,9 +74,6 @@ class Item():
         items = list()
 
         for (url, type) in parser.raw_items:
-            if type != "File":
-                # TODO: Extract usefull data out of these
-                continue
             if results := Item.get_correct_object(parent_type, parent_id, {"type": type, "url": url}):
                 item, task = results
                 tasks.append(task)
@@ -101,6 +97,9 @@ class MyHTMLParser(HTMLParser):
                 data_api_endpoint = attr[1]
             elif attr[0] == 'data-api-returntype':
                 data_api_returntype = attr[1]
+                # Nav btns
+                if data_api_returntype == "[Module]":
+                    return
 
         if data_api_endpoint == None or data_api_returntype == None:
             return
