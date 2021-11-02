@@ -48,11 +48,14 @@ class Item():
             return
 
         elif item_type == 'Discussion':
-            print(f"{item_type}: {raw_item}")
+            #print(f"{item_type}: {raw_item}")
             return
 
         elif item_type == 'ExternalTool':
-            print(f"{item_type}: {raw_item}")
+            #print(f"{item_type}: {raw_item}")
+            return
+        elif item_type == 'Quiz':
+            #print(f"{item_type}: {raw_item}")
             return
 
         else:
@@ -62,7 +65,11 @@ class Item():
     @staticmethod
     def get_correct_objects_from_html(parent_type: int, parent_id: int, html: str) -> (list, list):
         parser = MyHTMLParser()
-        parser.feed(html)
+        try:
+            parser.feed(html)
+        except TypeError:
+            # TODO: Find the error here
+            pass
 
         tasks = list()
         items = list()
@@ -149,6 +156,7 @@ class File(CanvasObject):
 
         try:
             # TODO: use the `reporthook` from urlretrieve for more accurate download progression
+            logging.info(f"dowloading: {path}")
             urllib.request.urlretrieve(self.url, filename=path)
             self.last_download = int(datetime.now().timestamp())
             pass
@@ -207,10 +215,11 @@ class Page(Container):
                 return
 
             body = json['body']
-            if results := Item.get_correct_objects_from_html(self.TYPE, self.object_id, body):
-                _, tasks = results
-                for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
-                    await task
+            if body != None:
+                if results := Item.get_correct_objects_from_html(self.TYPE, self.object_id, body):
+                    _, tasks = results
+                    for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
+                        await task
 
 class Assignment(Container):
     TYPE = 7

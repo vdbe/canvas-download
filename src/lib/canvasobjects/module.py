@@ -24,7 +24,10 @@ class Module(Container):
                 await task
 
     async def gather_items(self, get_json: Callable[[str], Union[list[dict], None]], db: dict):
-        json = await get_json(f"courses/{self.parent_id}/modules/{self.object_id}/items")
+        params = {
+            'per_page': '500'
+        }
+        json = await get_json(f"courses/{self.parent_id}/modules/{self.object_id}/items", params=params)
 
         if json:
             tasks = list()

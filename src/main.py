@@ -139,11 +139,17 @@ def sizeof_fmt(num, suffix="B"):
         num /= 1024.0
     return f"{num:.1f}Yi{suffix}"
 
-
 if __name__ == "__main__":
-
     logging.basicConfig(level=logging.DEBUG)
-    with open('config.json') as fp:
+
+    import sys
+
+    if len(sys.argv) > 1:
+        conf = sys.argv[1]
+    else:
+        conf = 'config.json'
+
+    with open(conf) as fp:
         cfg = json.load(fp)
 
     config = Config(**cfg)
