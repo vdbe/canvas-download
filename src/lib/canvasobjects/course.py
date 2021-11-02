@@ -24,7 +24,7 @@ class Course(Container):
 
     async def gather_items_from_syllabus_body(self, get_json: Callable[[str], Union[list[dict], None]], db):
         params = { "include[]": "syllabus_body"}
-        json = await get_json(f"courses/{self.object_id}", params=params)
+        _, json = await get_json(f"courses/{self.object_id}", params=params)
 
         if json:
             html = json['syllabus_body']
@@ -37,7 +37,7 @@ class Course(Container):
         params = {
             'per_page': '500'
         }
-        json = await get_json(f"courses/{self.object_id}/modules", params=params)
+        _, json = await get_json(f"courses/{self.object_id}/modules", params=params)
 
         if json:
             tasks = list()

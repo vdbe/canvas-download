@@ -27,7 +27,7 @@ class Module(Container):
         params = {
             'per_page': '500'
         }
-        json = await get_json(f"courses/{self.parent_id}/modules/{self.object_id}/items", params=params)
+        _, json = await get_json(f"courses/{self.parent_id}/modules/{self.object_id}/items", params=params)
 
         if json:
             tasks = list()

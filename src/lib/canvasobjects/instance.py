@@ -59,11 +59,10 @@ class Instance(Container):
         params = {
             'per_page': '500'
         }
-        json = await self.get_json("/courses", params=params)
+        _, json = await self.get_json("/courses", params=params)
 
         if json:
             tasks = list()
-
 
             for raw_course in json:
                 course_id = raw_course['id']
@@ -74,7 +73,7 @@ class Instance(Container):
             return tasks
 
 
-    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None, repeat=True) -> Union[list[dict], None]:
+    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None, repeat=True) -> Union[list[dict], bool]:
         if full == False:
             endpoint = f"{self.url}/api/v1/{endpoint}"
 
@@ -90,16 +89,24 @@ class Instance(Container):
             #index = self.session_index = (self.session_index + 1) % self.session_amount
             #self.session = self.sessions[index]
 
-            if resp.status == 200:
-                return await resp.json()
-            elif resp.status == 403 and repeat:
-                for i in range(10):
+            status = resp.status
+            if status == 200:
+                return resp.status, await resp.json()
+            elif status == 403 and repeat:
+                for i in range(20):
                     self.dup_requests += 1
-                    time.sleep(.1 * i)
-                    res = await self.get_json(endpoint, params=params, full=True, repeat=False)
-                    if res:
-                        return res
-                logging.error(f"403: sessions {self.session_index}")
+                    if i < 5:
+                        pass
+                    elif i < 10:
+                        await asyncio.sleep(.01 * i)
+                    else:
+                        logging.debug(f"repeated request {i} times: {endpoint}")
+                        time.sleep(0.1 * i)
+
+                    new_status, res = await self.get_json(endpoint, params=params, full=True, repeat=False)
+                    if new_status != 403:
+                        return new_status, res
+
+                logging.error(f"403: sessions {self.session_index} {endpoint}")
             else:
-                return
-                print(resp.status, await resp.text(), endpoint)
+                return status, False

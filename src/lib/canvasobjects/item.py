@@ -167,7 +167,7 @@ class File(CanvasObject):
 
 
     async def gather(self, url: str, get_json, db: dict) -> None:
-        json = await get_json(url, full = True)
+        _, json = await get_json(url, full = True)
 
         if json:
             object_id = self.object_id = json['id']
@@ -202,7 +202,7 @@ class Page(Container):
         super().__init__(object_id, parent_type, parent_id, object_name=None)
 
     async def gather(self, url: str, get_json: Callable[[str], Union[list[dict], None]], db: dict) -> None:
-        json = await get_json(url, full = True)
+        _, json = await get_json(url, full = True)
 
         if json:
             object_id = self.object_id = json['page_id']
@@ -227,7 +227,7 @@ class Assignment(Container):
         super().__init__(object_id, parent_type, parent_id, object_name)
 
     async def gather(self, url: str, get_json: Callable[[str], Union[list[dict], None]], db) -> None:
-        json = await get_json(url, full = True)
+        _, json = await get_json(url, full = True)
 
         if json:
             object_id = self.object_id = json['id']
