@@ -11,13 +11,13 @@ class CanvasObject:
     object_id: int
     object_name: str
 
-    def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name = None) -> None:
+    def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name: str = None) -> None:
         self.object_id = object_id
         self.parent_type = parent_type
         self.parent_id = parent_id
-        self.object_name = object_id
+        self.object_name = object_name
 
-    def to_json(self):
+    def to_json(self) -> None:
         json = {"parent_type": self.parent_type, "parent_id": self.parent_id, "object_id": self.object_id, "object_name": self.object_name }
         return json
 

@@ -13,16 +13,16 @@ class Course(Container):
     TYPE = 3
 
     def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name: str):
-        super().__init__(object_id, parent_type, parent_id)
-        self.object_name = object_name
+        super().__init__(object_id, parent_type, parent_id, object_name)
 
-    async def gather(self, get_json: Callable[[str], Union[list[dict], None]], db: dict) -> None:
+
+    async def gather(self, get_json, db: dict) -> None:
         tasks = await self.gather_modules(get_json, db)
 
         tasks = [task(get_json, db) for task in tasks]
         await asyncio.gather(*tasks, self.gather_items_from_syllabus_body(get_json, db))
 
-    async def gather_items_from_syllabus_body(self, get_json: Callable[[str], Union[list[dict], None]], db):
+    async def gather_items_from_syllabus_body(self, get_json, db: dict) -> None:
         params = { "include[]": "syllabus_body"}
         _, json = await get_json(f"courses/{self.object_id}", params=params)
 
@@ -33,7 +33,7 @@ class Course(Container):
             for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
                 await task
 
-    async def gather_modules(self, get_json: Callable[[str], Union[list[dict], None]], db: dict):
+    async def gather_modules(self, get_json, db: dict) -> list:
         params = {
             'per_page': '500'
         }

@@ -64,7 +64,7 @@ def main(config: Config) -> None:
     downloads = list()
     safe = not config.download.download_locked
 
-    logging.info(f"comparing timstamps...")
+    logging.info(f"comparing timestamps...")
     files = db[File.TYPE]
     old_files = old_db[File.TYPE]
     for file in files.values():
@@ -108,7 +108,7 @@ def main(config: Config) -> None:
         for _ in ThreadPool(parallel_downloads).imap_unordered(lambda f: f(), downloads):
             pass
 
-        logging.info(f"download time: {time.time() - start_time:.2f}")
+        logging.info(f"download time: {time.time() - start_time:.2f}s")
     else:
         logging.info(f"all files up-to-date")
 
@@ -121,18 +121,22 @@ def main(config: Config) -> None:
     _default.default = JSONEncoder().default
     JSONEncoder.default = _default
 
+    # Update the old db with the new values
+    # this way no data is lost when removed upstream
     d = dict()
     for key in old_db.keys():
-        d[key] = list(db[key].values())
+        old_db[key].update(db[key])
+        d[key] = list(old_db[key].values())
+    del db
+    del old_db
 
     json_db = json.dumps(d)
-    #print(json_db)
     with open(db_file, "w") as f:
         json.dump(d, f)
 
 
 # SRC: https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
-def sizeof_fmt(num, suffix="B"):
+def sizeof_fmt(num: int, suffix: str = "B"):
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return f"{num:3.1f}{unit}{suffix}"

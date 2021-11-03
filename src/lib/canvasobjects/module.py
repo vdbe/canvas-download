@@ -11,19 +11,18 @@ from .container import Container
 from .item import Item
 
 class Module(Container):
-    TYPE = 4
+    TYPE = 3
     def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name: str):
-        super().__init__(object_id, parent_type, parent_id)
-        self.object_name = object_name
+        super().__init__(object_id, parent_type, parent_id, object_name)
 
-    async def gather(self, get_json: Callable[[str], Union[list[dict], None]], db: dict) -> None:
+    async def gather(self, get_json, db: dict) -> None:
         tasks = await self.gather_items(get_json, db)
 
         if tasks:
             for task in asyncio.as_completed([task(get_json, db) for task in tasks]):
                 await task
 
-    async def gather_items(self, get_json: Callable[[str], Union[list[dict], None]], db: dict):
+    async def gather_items(self, get_json, db: dict) -> list:
         params = {
             'per_page': '500'
         }

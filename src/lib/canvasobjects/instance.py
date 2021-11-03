@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import aiohttp
-from typing import Union
+from typing import Union, Tuple
 import logging
 import time
 import functools
@@ -55,7 +55,7 @@ class Instance(Container):
         for task in asyncio.as_completed([session.close() for session in self.sessions]):
             await task
 
-    async def gather_courses(self):
+    async def gather_courses(self) -> list:
         params = {
             'per_page': '500'
         }
@@ -73,7 +73,7 @@ class Instance(Container):
             return tasks
 
 
-    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None, repeat=True) -> Union[list[dict], bool]:
+    async def get_json(self, endpoint: str, *_, full: bool = False, params: bool = None, repeat=True) -> Tuple[int ,Union[list[dict], bool]]:
         if full == False:
             endpoint = f"{self.url}/api/v1/{endpoint}"
 
