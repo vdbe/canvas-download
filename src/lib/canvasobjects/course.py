@@ -10,7 +10,7 @@ from .module import Module
 from .item import Item
 
 class Course(Container):
-    TYPE = 3
+    TYPE = 4
 
     def __init__(self, object_id: int, parent_type: int, parent_id: int, object_name: str):
         super().__init__(object_id, parent_type, parent_id, object_name)

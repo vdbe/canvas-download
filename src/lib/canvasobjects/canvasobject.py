@@ -2,7 +2,7 @@
 import json
 
 class CanvasObject:
-    # CanvasObject: 0, Container: 1, Instance: 2, Course: 3, Module: 4, File: 5, Page: 6, Assignment: 7
+    # CanvasObject: 0, Container: 1, Instance: 2, Course: 4, Module: 3, File: 5, Page: 6, Assignment: 7
     TYPE = 0
 
     # TODO: replace with enum
