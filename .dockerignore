@@ -1,0 +1,9 @@
+*
+
+!src/*
+!config.json
+!requirements.txt
+
+src/ui.py
+src/lib/ui
+**/__pycache__

@@ -38,3 +38,27 @@ Create `config.json` file in the root with the following content:
 ```sh
 python src/main.py
 ```
+
+### Docker
+
+1. Build the image
+``` sh
+docker build -t canvas-download .
+```
+This will copy config.json into the image
+
+2. Create & run the container
+``` sh
+docker run -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
+```
+Change `/app/downloads` to download path in config.json
+
+3. Run existing container
+``` sh
+docker start convas-download
+```
+
+4. If you want to see progress attach to the container
+``` sh
+docker attach convas-download
+```

@@ -1,0 +1,17 @@
+{
+  "canvas": {
+    "endpoint": "https://canvas.instructure.com",
+    "bearer_tokens": [
+      "12345~lksfsldkfjKLJfOQI890248KLJasdV12KJHdaslzkjvasdKJfafawe89123KJFHs"
+    ]
+  },
+  "db": {
+    "directory": "data/db",
+    "name": "db.json"
+  },
+  "download": {
+    "parallel_downloads": 20,
+    "download_locked": true,
+    "path": "./downloads"
+  }
+}
