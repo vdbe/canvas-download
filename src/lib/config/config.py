@@ -14,6 +14,7 @@ class Config:
         import asyncio
         import aiohttp
         import json
+        from pathlib import Path
         from ..canvasobjects.instance import Instance
 
         async def check_creds(endpoint: str, token: str):
@@ -47,6 +48,7 @@ class Config:
         endpoint = input().strip()
 
 
+        print("")
         print("What is your API access token?")
         print("If you don't have one already just follow these instructions: https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89")
         print("canvas token: ", end="")
@@ -54,10 +56,10 @@ class Config:
 
         print("")
         print("Checking info...")
-        print("")
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(check_creds(endpoint, token))
+        print("")
 
         cfg["canvas"] = {}
         cfg["canvas"]["endpoint"] = endpoint
@@ -101,8 +103,13 @@ class Config:
         # TODO: check if exists or use random name
         cfg["db"]["name"] = "db.json"
 
+
+        # Create dir
+        Path(config_file).parent.mkdir(parents=True, exist_ok=True)
+
         with open(config_file, "w") as f:
-            print("writting config")
+            print("writting config file")
             json.dump(cfg, f, indent=True)
+        print("")
 
         return cfg

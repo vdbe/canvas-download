@@ -16,7 +16,7 @@ from lib.config import Config
 
 def main(config: Config) -> None:
     # Scrape Canvas
-    logging.info(f"start gather...")
+    logging.info(f"start gathering...")
     instance = Instance(config.canvas.endpoint, config.canvas.bearer_token)
     start_time = time.time()
     instance.start_gather()
@@ -133,6 +133,8 @@ def main(config: Config) -> None:
     with open(db_file, "w") as f:
         json.dump(d, f)
 
+    logging.info(f"exiting...")
+
 
 # SRC: https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
 def sizeof_fmt(num: int, suffix: str = "B"):
@@ -143,14 +145,17 @@ def sizeof_fmt(num: int, suffix: str = "B"):
     return f"{num:.1f}Yi{suffix}"
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     import sys
 
     if len(sys.argv) > 1:
         conf = sys.argv[1]
+        if conf == '=h' or conf == "--help":
+            print(f"f{sys.argv[0]} [config file]")
+            exit(0)
     else:
-        conf = 'config.json'
+        conf = 'data/config/config.json'
 
     if Path(conf).is_file():
         with open(conf) as fp:

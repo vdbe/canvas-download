@@ -1,16 +1,68 @@
 # canvas-download
 ## Requirements
-- [python](https://www.python.org/)
+- [docker](https://docs.docker.com/get-docker/) or [python](https://www.python.org/)
 
-## Installation
+## Running
 
-```sh
-pip install -r requirements.txt
+### Docker
+
+1. Create & run the container 
+``` sh
+# for linux and powershell
+docker run -it -v canvas-download_data:/app/data -v ${PWD}/downloads:/app/downloads --name canvas-download ghcr.io/vdbe/canvas-download:release
+```
+You can change `${PWD}/downloads` to a location of your choosing,
+all downloaded files will be placed here.
+
+2. Run existing container
+``` sh
+docker start -it convas-download
+```
+You can leave out the `-it` if you do not want to attach to containers STDIN & STDOUT/STEDERR
+
+- To update the local files run the container again as in step 2
+
+- If you want to see what happend after the container stopped
+``` sh
+docker logs canvas-download
+```
+- Remove container
+
+``` sh
+docker rm canvas-download
+```
+
+- Remove data volume
+
+``` sh
+docker volume rm canvas-download_data
+```
+
+### Native
+
+0. Setup & activate venv (optional)
+
+``` sh
+python3 -m env
+source env/bin/activate
+```
+
+1. Install dependencies
+
+``` sh
+pip3 install -r requirements.txt
+```
+
+2. Run it
+
+``` sh
+python3 src/main.py [config file]
 ```
 
 ## Configuration
-Create `config.json` file in the root with the following content:
+This is not needed if no `data/config/config.json` exists it will be created when you run `src/main.py` for the first time
 
+Create `config.json` file in the root with the following content:
 ```json
 {
   "canvas": {
@@ -31,44 +83,4 @@ Create `config.json` file in the root with the following content:
 }
 ```
 [How do I obtain an access token?](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89)
-
-
-## Running
-
-``` sh
-python src/main.py
-```
-
-### Docker
-
-1. Create & run the container 
-``` sh
-docker run -it -v ${PWD}/downloads:/app/downloads --name canvas-download ghcr.io/vdbe/canvas-download:release
-```
-You can provide an existing config.json by adding the following option `-v ${PWD}/config.json:/app/config.json`,
-if you don't provide a config.json it will guide you to create one.
-Change `/app/downloads` to download path in config.json (default is `app/downloads`)
-
-
-2. Run existing container
-``` sh
-docker start convas-download
-```
-
-3. If you want to see progress attach to the container
-``` sh
-docker attach convas-download
-```
-
-- To update the local files run the container again as in step 2
-
-- If you want to see what happend after the container stopped
-``` sh
-docker logs canvas-download
-```
-- Remove container
-
-``` sh
-docker rm canvas-download
-```
 
