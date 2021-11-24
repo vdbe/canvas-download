@@ -41,31 +41,26 @@ python src/main.py
 
 ### Docker
 
-1. Build the image
+1. Create & run the container 
 ``` sh
-docker build -t canvas-download .
-```
-
-2. Create & run the container
-``` sh
-docker run -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
+docker run -it -v ${PWD}/downloads:/app/downloads --name canvas-download ghcr.io/vdbe/canvas-download:release
 ```
 You can provide an existing config.json by adding the following option `-v ${PWD}/config.json:/app/config.json`,
 if you don't provide a config.json it will guide you to create one.
 Change `/app/downloads` to download path in config.json (default is `app/downloads`)
 
 
-3. Run existing container
+2. Run existing container
 ``` sh
 docker start convas-download
 ```
 
-4. If you want to see progress attach to the container
+3. If you want to see progress attach to the container
 ``` sh
 docker attach convas-download
 ```
 
-- To update the local files run the container again as in step 3
+- To update the local files run the container again as in step 2
 
 - If you want to see what happend after the container stopped
 ``` sh

@@ -49,7 +49,7 @@ class Config:
 
         print("What is your API access token?")
         print("If you don't have one already just follow these instructions: https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89")
-        print("canvas endpoint: ", end="")
+        print("canvas token: ", end="")
         token = input().strip()
 
         print("")
