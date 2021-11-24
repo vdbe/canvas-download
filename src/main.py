@@ -17,7 +17,7 @@ from lib.config import Config
 def main(config: Config) -> None:
     # Scrape Canvas
     logging.info(f"start gather...")
-    instance = Instance(config.canvas.endpoint, config.canvas.bearer_tokens)
+    instance = Instance(config.canvas.endpoint, config.canvas.bearer_token)
     start_time = time.time()
     instance.start_gather()
     logging.info(f"gather time: {time.time() - start_time:.2f}s")
@@ -130,7 +130,6 @@ def main(config: Config) -> None:
     del db
     del old_db
 
-    json_db = json.dumps(d)
     with open(db_file, "w") as f:
         json.dump(d, f)
 
@@ -153,8 +152,13 @@ if __name__ == "__main__":
     else:
         conf = 'config.json'
 
-    with open(conf) as fp:
-        cfg = json.load(fp)
+    if Path(conf).is_file():
+        with open(conf) as fp:
+            cfg = json.load(fp)
+    else:
+        cfg = Config.create(conf)
+        if cfg == False:
+            exit(1)
 
     config = Config(**cfg)
     main(config)

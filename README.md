@@ -30,7 +30,7 @@ Create `config.json` file in the root with the following content:
   }
 }
 ```
-[How do I obtain an API access token in the Canvas Data Portal? ](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-obtain-an-API-access-token-in-the-Canvas-Data-Portal/ta-p/157)
+[How do I obtain an access token?](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89)
 
 
 ## Running
@@ -45,13 +45,15 @@ python src/main.py
 ``` sh
 docker build -t canvas-download .
 ```
-This will copy config.json into the image
 
 2. Create & run the container
 ``` sh
-docker run -v ${PWD}/config.json:/app/config.json  -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
+docker run -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
 ```
-Change `/app/downloads` to download path in config.json
+You can provide an existing config.json by adding the following option `-v ${PWD}/config.json:/app/config.json`,
+if you don't provide a config.json it will guide you to create one.
+Change `/app/downloads` to download path in config.json (default is `app/downloads`)
+
 
 3. Run existing container
 ``` sh
@@ -68,5 +70,10 @@ docker attach convas-download
 - If you want to see what happend after the container stopped
 ``` sh
 docker logs canvas-download
+```
+- Remove container
+
+``` sh
+docker rm canvas-download
 ```
 

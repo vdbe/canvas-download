@@ -13,9 +13,10 @@ from .course import Course
 class Instance(Container):
     TYPE = 2
 
-    def __init__(self, url: str, bearer_tokens: list[str]) -> None:
+    def __init__(self, url: str, bearer_token: str) -> None:
         super().__init__(0, self.TYPE, 0)
-        self.bearer_tokens = bearer_tokens
+        #self.bearer_tokens = bearer_tokens
+        self.bearer_token = bearer_token
         self.url = url
         self.parent_id = 0
 
@@ -30,16 +31,17 @@ class Instance(Container):
 
 
     def start_gather(self) -> None:
-        self.session_amount = len(self.bearer_tokens)
-        self.session_index = 0
-        self.sessions = list()
+        #self.session_amount = len(self.bearer_tokens)
+        #self.session_index = 0
+        #self.sessions = list()
 
         asyncio.run(self.gather())
 
     async def gather(self) -> None:
         # Setup
-        self.sessions = [aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"}) for token in self.bearer_tokens]
-        self.session = self.sessions[self.session_index]
+        #self.sessions = [aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"}) for token in self.bearer_tokens]
+        #self.session = self.sessions[self.session_index]
+        self.session = aiohttp.ClientSession(headers={f"Authorization": f"Bearer {self.bearer_token}"})
 
         # Get everything
         tasks = await self.gather_courses()
@@ -52,8 +54,9 @@ class Instance(Container):
             await asyncio.gather(*tasks)
 
         # Shutdown
-        for task in asyncio.as_completed([session.close() for session in self.sessions]):
-            await task
+        #for task in asyncio.as_completed([session.close() for session in self.sessions]):
+        #    await task
+        await self.session.close()
 
     async def gather_courses(self) -> list:
         params = {
