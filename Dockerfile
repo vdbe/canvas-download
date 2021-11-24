@@ -19,6 +19,5 @@ FROM gcr.io/distroless/python3-debian11
 COPY --from=build-venv /app /app
 COPY --from=build-venv /venv /venv
 COPY ./src /app/src
-COPY ./config.json /app
 WORKDIR /app
 ENTRYPOINT ["/venv/bin/python3", "src/main.py"]

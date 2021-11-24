@@ -35,7 +35,7 @@ Create `config.json` file in the root with the following content:
 
 ## Running
 
-```sh
+``` sh
 python src/main.py
 ```
 
@@ -49,7 +49,7 @@ This will copy config.json into the image
 
 2. Create & run the container
 ``` sh
-docker run -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
+docker run -v ${PWD}/config.json:/app/config.json  -v ${PWD}/downloads:/app/downloads --name canvas-download canvas-download
 ```
 Change `/app/downloads` to download path in config.json
 
@@ -62,3 +62,11 @@ docker start convas-download
 ``` sh
 docker attach convas-download
 ```
+
+- To update the local files run the container again as in step 3
+
+- If you want to see what happend after the container stopped
+``` sh
+docker logs canvas-download
+```
+
