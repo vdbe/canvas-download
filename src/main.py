@@ -5,7 +5,6 @@ import time
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import functools
-import pickle
 from json import JSONEncoder
 
 from lib.canvasobjects.module import Module
@@ -160,10 +159,11 @@ if __name__ == "__main__":
     if Path(conf).is_file():
         with open(conf) as fp:
             cfg = json.load(fp)
+            config = Config(**cfg)
+            del cfg
     else:
-        cfg = Config.create(conf)
-        if cfg == False:
+        config = Config.create(conf)
+        if config == False:
             exit(1)
 
-    config = Config(**cfg)
     main(config)
