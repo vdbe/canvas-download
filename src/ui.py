@@ -25,19 +25,20 @@ class QTextEditLogger(logging.Handler):
         msg = self.format(record)
         self.widget.appendPlainText(msg)
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow,self).__init__()
+        super(MainWindow, self).__init__()
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         # Setup title and icon for window
-        self.setWindowTitle('Canvas Download')
-        #self.noteIcon = os.path.join( os.path.dirname(__file__), 'PyCodeNoteLogo.svg' )
-        #self.setWindowIcon(QtGui.QIcon(self.noteIcon))
+        self.setWindowTitle("Canvas Download")
+        # self.noteIcon = os.path.join( os.path.dirname(__file__), 'PyCodeNoteLogo.svg' )
+        # self.setWindowIcon(QtGui.QIcon(self.noteIcon))
 
-        self.config_file = 'data/config/config.json'
+        self.config_file = "data/config/config.json"
 
         if Path(self.config_file).is_file():
             with open(self.config_file) as fp:
@@ -47,11 +48,15 @@ class MainWindow(QMainWindow):
         if config != None:
             self.ui.hostInput.setText(self.config.canvas.endpoint)
             self.ui.tokenInput.setText(self.config.canvas.bearer_token)
-            self.ui.parallelDownloadsSpinBox.setValue(self.config.download.parallel_downloads)
-            self.ui.downloadLockedCheckBox.setChecked(self.config.download.download_locked)
+            self.ui.parallelDownloadsSpinBox.setValue(
+                self.config.download.parallel_downloads
+            )
+            self.ui.downloadLockedCheckBox.setChecked(
+                self.config.download.download_locked
+            )
         else:
-            self.ui.hostInput.setPlaceholderText('Hostname')
-            self.ui.tokenInput.setPlaceholderText('token')
+            self.ui.hostInput.setPlaceholderText("Hostname")
+            self.ui.tokenInput.setPlaceholderText("token")
             self.ui.parallelDownloadsSpinBox.setValue(20)
             self.ui.runPushButton.setChecked(False)
 
@@ -65,9 +70,9 @@ class MainWindow(QMainWindow):
 
         self.logTextBox = QTextEditLogger(self)
         # You can format what is printed to text box
-        #logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        # logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logTextBox.setLevel(level=logging.INFO)
-        self.logTextBox.setFormatter(logging.Formatter('%(message)s'))
+        self.logTextBox.setFormatter(logging.Formatter("%(message)s"))
         logging.getLogger().addHandler(self.logTextBox)
         # You can control the logging level
         logging.getLogger().setLevel(logging.DEBUG)
@@ -75,17 +80,27 @@ class MainWindow(QMainWindow):
         self.ui.gridLayout.addWidget(self.logTextBox.widget, 6, 0, 1, 1)
 
         # Apply page switch buttons
-        self.ui.runPushButton.clicked.connect(lambda: self.runButtonClicked())
+        self.ui.runPushButton.clicked.connect(self.runButtonClicked)
 
     def runButtonClicked(self):
         self.config.canvas.endpoint = self.ui.hostInput.text()
         self.config.canvas.bearer_token = self.ui.tokenInput.text()
-        self.config.download.parallel_downloads = self.ui.parallelDownloadsSpinBox.value()
-        self.config.download.download_locked = self.ui.downloadLockedCheckBox.isChecked()
+        self.config.download.parallel_downloads = (
+            self.ui.parallelDownloadsSpinBox.value()
+        )
+        self.config.download.download_locked = (
+            self.ui.downloadLockedCheckBox.isChecked()
+        )
 
         download = self.config.download
 
-        tmp = Config.create(self.config_file, self.config.canvas.endpoint, self.config.canvas.bearer_token, self.config.download.download_locked, self.config.download.parallel_downloads)
+        tmp = Config.create(
+            self.config_file,
+            self.config.canvas.endpoint,
+            self.config.canvas.bearer_token,
+            self.config.download.download_locked,
+            self.config.download.parallel_downloads,
+        )
         if tmp == False:
             return
 
@@ -94,9 +109,10 @@ class MainWindow(QMainWindow):
 
         main(self.config)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
+
     win = MainWindow()
     win.show()
     app.exec()

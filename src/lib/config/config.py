@@ -3,14 +3,22 @@ from .canvas import Canvas
 from .db import DB
 from .download import Download
 
+
 class Config:
     def __init__(self, **config: dict):
-        self.canvas = Canvas(config['canvas'])
-        self.db = DB(config['db'])
-        self.download = Download(config['download'])
+        self.canvas = Canvas(config["canvas"])
+        self.db = DB(config["db"])
+        self.download = Download(config["download"])
 
     @classmethod
-    def create(cls, config_file: str, endpoint = None, token = None, download_locked = None, parallel_downloads = None):
+    def create(
+        cls,
+        config_file: str,
+        endpoint=None,
+        token=None,
+        download_locked=None,
+        parallel_downloads=None,
+    ):
         import asyncio
         import aiohttp
         import json
@@ -21,11 +29,13 @@ class Config:
         async def check_creds(ptr: dict, endpoint: str, token: str):
             creds_valid = False
 
-            async with aiohttp.ClientSession(headers={f"Authorization": f"Bearer {token}"}) as session:
-                params = {
-                    'per_page': '0'
-                }
-                async with session.get(f"{endpoint}/api/v1/courses", params=params) as resp:
+            async with aiohttp.ClientSession(
+                headers={f"Authorization": f"Bearer {token}"}
+            ) as session:
+                params = {"per_page": "0"}
+                async with session.get(
+                    f"{endpoint}/api/v1/courses", params=params
+                ) as resp:
                     status = resp.status
                     if status == 404:
                         logging.info("Invalid host")
@@ -39,32 +49,32 @@ class Config:
                     else:
                         logging.info("Something went wrong please try again")
                         creds_valid = False
-                ptr['success'] = creds_valid
+                ptr["success"] = creds_valid
 
         cfg = {}
 
         if endpoint == None:
-            print("What is the canvas host, an example is `https://canvas.instructure.com`")
+            print(
+                "What is the canvas host, an example is `https://canvas.instructure.com`"
+            )
             print("canvas host: ", end="")
             endpoint = input().strip()
-
 
         if token == None:
             print("")
             print("What is your API access token?")
-            print("If you don't have one already just follow these instructions: https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89")
+            print(
+                "If you don't have one already just follow these instructions: https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89"
+            )
             print("canvas token: ", end="")
             token = input().strip()
 
         logging.info("")
         logging.info("Checking info...")
 
-        d = {
-            "success": False
-        }
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(check_creds(d, endpoint, token))
+        d = {"success": False}
         logging.info("")
+        asyncio.run(check_creds(d, endpoint, token))
 
         if d["success"] == False:
             logging.info("exit")
@@ -74,15 +84,14 @@ class Config:
         cfg["canvas"]["endpoint"] = endpoint
         cfg["canvas"]["bearer_token"] = token
 
-
         if download_locked == None:
             print("Do you want to download locked files [yes/no](default no): ", end="")
             answer = input().strip()
             download_locked = False
-            if answer == 'yes':
+            if answer == "yes":
                 print("`yes` selected")
                 download_locked = True
-            elif answer == 'no':
+            elif answer == "no":
                 print("`no` selected")
             else:
                 print("Unknown optin defaulting to `no`")
@@ -116,7 +125,6 @@ class Config:
 
         # TODO: check if exists or use random name
         cfg["db"]["name"] = "db.json"
-
 
         # Create dir
         Path(config_file).parent.mkdir(parents=True, exist_ok=True)
