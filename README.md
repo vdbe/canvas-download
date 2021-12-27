@@ -61,14 +61,12 @@ python3 src/main.py [config file]
 This is not needed if no `data/config/config.json` exists it will be created when you run `src/main.py` for the first time.
 [How do I obtain an access token?](https://community.canvaslms.com/t5/Admin-Guide/How-do-I-manage-API-access-tokens-as-an-admin/ta-p/89)
 
-Create `config.json` file in the root with the following content:
+Create `data/config/config.json` file in the root with the following content:
 ```json
 {
   "canvas": {
     "endpoint": "<canvas endpoint>",
-    "bearer_tokens": [
-      "<API access token>"
-    ]
+    "bearer_token": "<API access token>"
   },
   "db": {
     "directory": "data/db",
@@ -76,7 +74,7 @@ Create `config.json` file in the root with the following content:
   },
   "download": {
     "parallel_downloads": 10,
-    "download_locked": true,
+    "download_locked": false,
     "path": "./downloads"
   }
 }
